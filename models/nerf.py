@@ -68,8 +68,8 @@ class NeRF(nn.Module):
         # self.xyz_encoding_final = nn.Linear(W, W)
 
         # direction encoding layers
-        self.dir_encoding = nn.Sequential(
-                        nn.Linear(W+in_channels_dir, W//2), nn.ReLU(True))
+        self.dir_encoding = nn.ModuleList(
+                        nn.Linear(W+in_channels_dir, W//2))
 
         # static output layers
         self.static_rgb = nn.Linear(W//2, 3)
@@ -107,14 +107,14 @@ class NeRF(nn.Module):
             xyz_ = F.relu(xyz_)
             if i in self.skips:
                 xyz_ = torch.cat([input_xyz, xyz_], 1)
-            xyz_ = getattr(self, f"xyz_encoding_{i+1}")(xyz_)
+            # xyz_ = getattr(self, f"xyz_encoding_{i+1}")(xyz_)
 
         static_sigma = self.alpha_linear(xyz_) # (B, 1)
         feature  = self.feature_linear(xyz_)
-        xyz_ = torch.cat([feature,static_sigma],-1)
+        xyz_ = torch.cat([feature,static_sigma],1)
 
-        for i, l in enumerate(self.view_linear):
-            xyz_ = self.view_linear[i](xyz_)
+        for i, l in enumerate(self.dir_encoding):
+            xyz_ = self.dir_encoding[i](xyz_)
 
         static_rgb = self.static_rgb(xyz_) # (B, 3)
         static = torch.cat([static_rgb, static_sigma], 1) # (B, 4)

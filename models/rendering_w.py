@@ -137,17 +137,21 @@ def render_rays(models,
         delta_inf = 1e2 * torch.ones_like(deltas[:, :1]) # (N_rays, 1) the last delta is infinity
         deltas = torch.cat([deltas, delta_inf], -1)  # (N_rays, N_samples_)
 
-        # if output_transient:
-        #     static_alphas = 1-torch.exp(-deltas*static_sigmas)
-        #     transient_alphas = 1-torch.exp(-deltas*transient_sigmas)
-        #     alphas = 1-torch.exp(-deltas*(static_sigmas+transient_sigmas))
-        
+        if output_transient:
+            static_alphas = 1-torch.exp(-deltas*static_sigmas)
+            transient_alphas = 1-torch.exp(-deltas*transient_sigmas)
+            alphas = 1-torch.exp(-deltas*(static_sigmas+transient_sigmas))
+        else:
 #             noise = torch.randn_like(static_sigmas) * noise_std
-        alphas = 1-torch.exp(-deltas*static_sigmas)
+            alphas = 1-torch.exp(-deltas*static_sigmas)
 
         alphas_shifted = \
             torch.cat([torch.ones_like(alphas[:, :1]), 1-alphas], -1) # [1, 1-a1, 1-a2, ...]
         transmittance = torch.cumprod(alphas_shifted[:, :-1], -1) # [1, 1-a1, (1-a1)(1-a2), ...]
+
+        if output_transient:
+            static_weights = static_alphas * transmittance
+            transient_weights = transient_alphas * transmittance
 
         weights = alphas * transmittance
         weights_sum = reduce(weights, 'n1 n2 -> n1', 'sum')
@@ -158,12 +162,59 @@ def render_rays(models,
             results['transient_sigmas'] = transient_sigmas
         if test_time and typ == 'coarse':
             return
-        
-        rgb_map = reduce(rearrange(weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
-                            'n1 n2 c -> n1 c', 'sum')
-        if white_back:
-            rgb_map += 1-rearrange(weights_sum, 'n -> n 1')
-        results[f'rgb_{typ}'] = rgb_map
+
+
+        if output_transient:
+            static_rgb_map = reduce(rearrange(static_weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
+                                    'n1 n2 c -> n1 c', 'sum')
+            if white_back:
+                static_rgb_map += 1-rearrange(weights_sum, 'n -> n 1')
+            
+            transient_rgb_map = \
+                reduce(rearrange(transient_weights, 'n1 n2 -> n1 n2 1')*transient_rgbs,
+                       'n1 n2 c -> n1 c', 'sum')
+            results['beta'] = reduce(transient_weights*transient_betas, 'n1 n2 -> n1', 'sum')
+            # Add beta_min AFTER the beta composition. Different from eq 10~12 in the paper.
+            # See "Notes on differences with the paper" in README.
+            results['beta'] += model.beta_min
+            
+            # the rgb maps here are when both fields exist
+            results['_rgb_fine_static'] = static_rgb_map
+            results['_rgb_fine_transient'] = transient_rgb_map
+            results['rgb_fine'] = static_rgb_map + transient_rgb_map
+
+            if test_time:
+                # Compute also static and transient rgbs when only one field exists.
+                # The result is different from when both fields exist, since the transimttance
+                # will change.
+                static_alphas_shifted = \
+                    torch.cat([torch.ones_like(static_alphas[:, :1]), 1-static_alphas], -1)
+                static_transmittance = torch.cumprod(static_alphas_shifted[:, :-1], -1)
+                static_weights_ = static_alphas * static_transmittance
+                static_rgb_map_ = \
+                    reduce(rearrange(static_weights_, 'n1 n2 -> n1 n2 1')*static_rgbs,
+                           'n1 n2 c -> n1 c', 'sum')
+                if white_back:
+                    static_rgb_map_ += 1-rearrange(weights_sum, 'n -> n 1')
+                results['rgb_fine_static'] = static_rgb_map_
+                results['depth_fine_static'] = \
+                    reduce(static_weights_*z_vals, 'n1 n2 -> n1', 'sum')
+
+                transient_alphas_shifted = \
+                    torch.cat([torch.ones_like(transient_alphas[:, :1]), 1-transient_alphas], -1)
+                transient_transmittance = torch.cumprod(transient_alphas_shifted[:, :-1], -1)
+                transient_weights_ = transient_alphas * transient_transmittance
+                results['rgb_fine_transient'] = \
+                    reduce(rearrange(transient_weights_, 'n1 n2 -> n1 n2 1')*transient_rgbs,
+                           'n1 n2 c -> n1 c', 'sum')
+                results['depth_fine_transient'] = \
+                    reduce(transient_weights_*z_vals, 'n1 n2 -> n1', 'sum')
+        else: # no transient field
+            rgb_map = reduce(rearrange(weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
+                             'n1 n2 c -> n1 c', 'sum')
+            if white_back:
+                rgb_map += 1-rearrange(weights_sum, 'n -> n 1')
+            results[f'rgb_{typ}'] = rgb_map
 
         results[f'depth_{typ}'] = reduce(weights*z_vals, 'n1 n2 -> n1', 'sum')
         return

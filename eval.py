@@ -6,8 +6,8 @@ from tqdm import tqdm
 import imageio
 from argparse import ArgumentParser
 
-from models.rendering import render_rays
-from models.nerf import *
+from models.rendering_w import render_rays
+from models.nerf_w import *
 
 from utils import load_ckpt
 import metrics
