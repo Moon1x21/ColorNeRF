@@ -34,7 +34,7 @@ class PosEmbedding(nn.Module):
 class NeRF(nn.Module):
     def __init__(self, typ,
                  D=8, W=256, skips=[4],
-                 in_channels_xyz=63, in_channels_dir=27):
+                 in_channels_xyz=3, in_channels_dir=3):
         """
         ---Parameters for the original NeRF---
         D: number of layers for density (sigma) encoder
@@ -96,7 +96,7 @@ class NeRF(nn.Module):
         """
   
       
-        input_xyz, input_dir_a = \
+        input_xyz, input_views = \
                 torch.split(x, [self.in_channels_xyz,
                                 self.in_channels_dir], dim=-1)
             
@@ -111,7 +111,7 @@ class NeRF(nn.Module):
 
         static_sigma = self.alpha_linear(xyz_) # (B, 1)
         feature  = self.feature_linear(xyz_)
-        xyz_ = torch.cat([feature,static_sigma],1)
+        xyz_ = torch.cat([feature,input_views],1)
 
         for i, l in enumerate(self.dir_encoding):
             xyz_ = self.dir_encoding[i](xyz_)
