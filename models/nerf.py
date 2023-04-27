@@ -102,7 +102,7 @@ class NeRF(nn.Module):
             
 
         xyz_ = input_xyz
-        for i in range(self.D):
+        for i in range(self.D-1):
             xyz_ = self.pts_linears[i](xyz_)
             xyz_ = F.relu(xyz_)
             if i in self.skips:
