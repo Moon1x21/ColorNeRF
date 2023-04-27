@@ -8,7 +8,7 @@ from datasets import dataset_dict
 
 # models
 from models.nerf_w import *
-from models.rendering import *
+from models.rendering_w import *
 
 # optimizer, scheduler, visualization
 from utils import *

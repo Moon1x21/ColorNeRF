@@ -213,17 +213,17 @@ def render_rays(models,
         xyz_fine = rays_o + rays_d * rearrange(z_vals, 'n1 n2 -> n1 n2 1')
 
         model = models['fine']
-        if model.encode_appearance:
-            if 'a_embedded' in kwargs:
-                a_embedded = kwargs['a_embedded']
-            else:
-                a_embedded = embeddings['a'](ts)
-        output_transient = kwargs.get('output_transient', True) and model.encode_transient
-        if output_transient:
-            if 't_embedded' in kwargs:
-                t_embedded = kwargs['t_embedded']
-            else:
-                t_embedded = embeddings['t'](ts)
+        # if model.encode_appearance:
+        #     if 'a_embedded' in kwargs:
+        #         a_embedded = kwargs['a_embedded']
+        #     else:
+        #         a_embedded = embeddings['a'](ts)
+        # output_transient = kwargs.get('output_transient', True) and model.encode_transient
+        # if output_transient:
+        #     if 't_embedded' in kwargs:
+        #         t_embedded = kwargs['t_embedded']
+        #     else:
+        #         t_embedded = embeddings['t'](ts)
         inference(results, model, xyz_fine, z_vals, test_time, **kwargs)
 
     return results

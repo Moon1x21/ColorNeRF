@@ -69,7 +69,7 @@ class NeRF(nn.Module):
 
         # direction encoding layers
         self.dir_encoding = nn.ModuleList(
-                        nn.Linear(W+in_channels_dir, W//2))
+                        [nn.Linear(W+in_channels_dir, W//2)])
 
         # static output layers
         self.static_rgb = nn.Linear(W//2, 3)
