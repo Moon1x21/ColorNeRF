@@ -25,12 +25,14 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import TestTubeLogger
 
 
+
+
 class NeRFSystem(LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
 
-        self.loss = loss_dict['nerfw'](coef=1)
+        self.loss = loss_dict['color'](coef=1)
 
         self.models_to_train = []
         self.embedding_xyz = PosEmbedding(hparams.N_emb_xyz-1, hparams.N_emb_xyz)
@@ -48,13 +50,13 @@ class NeRFSystem(LightningModule):
             self.models_to_train += [self.embedding_t]
 
         self.nerf_coarse = NeRF('coarse',
-                                in_channels_xyz=6*hparams.N_emb_xyz+3,
-                                in_channels_dir=6*hparams.N_emb_dir+3)
+                                input_ch=int(6*hparams.N_emb_xyz+3),
+                                input_ch_views=int(6*hparams.N_emb_dir+3))
         self.models = {'coarse': self.nerf_coarse}
         if hparams.N_importance > 0:
             self.nerf_fine = NeRF('fine',
-                                  in_channels_xyz=6*hparams.N_emb_xyz+3,
-                                  in_channels_dir=6*hparams.N_emb_dir+3)
+                                  input_ch=int(6*hparams.N_emb_xyz+3),
+                                  input_ch_views=int(6*hparams.N_emb_dir+3))
             self.models['fine'] = self.nerf_fine
         self.models_to_train += [self.models]
 
@@ -123,8 +125,8 @@ class NeRFSystem(LightningModule):
     def training_step(self, batch, batch_nb):
         rays, rgbs, ts = batch['rays'], batch['rgbs'], batch['ts']
         results = self(rays, ts)
-        loss_d = self.loss(results, rgbs)
-        loss = sum(l for l in loss_d.values())
+        loss = self.loss(results, rgbs)
+        # loss = sum(l for l in loss_d.values())
 
         with torch.no_grad():
             typ = 'fine' if 'rgb_fine' in results else 'coarse'
@@ -132,8 +134,8 @@ class NeRFSystem(LightningModule):
 
         self.log('lr', get_learning_rate(self.optimizer))
         self.log('train/loss', loss)
-        for k, v in loss_d.items():
-            self.log(f'train/{k}', v, prog_bar=True)
+        # for k, v in loss_d.items():
+        #     self.log(f'train/{k}', v, prog_bar=True)
         self.log('train/psnr', psnr_, prog_bar=True)
 
         return loss
@@ -144,8 +146,9 @@ class NeRFSystem(LightningModule):
         rgbs = rgbs.squeeze() # (H*W, 3)
         ts = ts.squeeze() # (H*W)
         results = self(rays, ts)
-        loss_d = self.loss(results, rgbs)
-        loss = sum(l for l in loss_d.values())
+        loss = self.loss(results, rgbs)
+        # loss = sum(l for l in loss_d.values())
+        
         log = {'val_loss': loss}
         typ = 'fine' if 'rgb_fine' in results else 'coarse'
     

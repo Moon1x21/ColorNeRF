@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+import torch.nn.functional as F
 from einops import rearrange, reduce, repeat
 
 __all__ = ['render_rays']
@@ -44,7 +46,6 @@ def sample_pdf(bins, weights, N_importance, det=False, eps=1e-5):
 
     samples = bins_g[...,0] + (u-cdf_g[...,0])/denom * (bins_g[...,1]-bins_g[...,0])
     return samples
-
 
 def render_rays(models,
                 embeddings,
@@ -101,9 +102,10 @@ def render_rays(models,
         B = xyz_.shape[0]
         out_chunks = []
         if typ=='coarse' and test_time:
+            dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             for i in range(0, B, chunk):
                 xyz_embedded = embedding_xyz(xyz_[i:i+chunk])
-                out_chunks += [model(xyz_embedded, sigma_only=True)]
+                out_chunks += [model(torch.cat(xyz_embedded, dir_embedded_[i:i+chunk],1))]
             out = torch.cat(out_chunks, 0)
             static_sigmas = rearrange(out, '(n1 n2) 1 -> n1 n2', n1=N_rays, n2=N_samples_)
         else: # infer rgb and sigma and others
@@ -127,37 +129,28 @@ def render_rays(models,
             out = rearrange(out, '(n1 n2) c -> n1 n2 c', n1=N_rays, n2=N_samples_)
             static_rgbs = out[..., :3] # (N_rays, N_samples_, 3)
             static_sigmas = out[..., 3] # (N_rays, N_samples_)
-            if output_transient:
-                transient_rgbs = out[..., 4:7]
-                transient_sigmas = out[..., 7]
-                transient_betas = out[..., 8]
 
         # Convert these values using volume rendering
         deltas = z_vals[:, 1:] - z_vals[:, :-1] # (N_rays, N_samples_-1)
-        delta_inf = 1e2 * torch.ones_like(deltas[:, :1]) # (N_rays, 1) the last delta is infinity
+        delta_inf = 1e10 * torch.ones_like(deltas[:, :1]) # (N_rays, 1) the last delta is infinity
         deltas = torch.cat([deltas, delta_inf], -1)  # (N_rays, N_samples_)
 
-        # if output_transient:
-        #     static_alphas = 1-torch.exp(-deltas*static_sigmas)
-        #     transient_alphas = 1-torch.exp(-deltas*transient_sigmas)
-        #     alphas = 1-torch.exp(-deltas*(static_sigmas+transient_sigmas))
-        
-#             noise = torch.randn_like(static_sigmas) * noise_std
         alphas = 1-torch.exp(-deltas*static_sigmas)
 
         alphas_shifted = \
-            torch.cat([torch.ones_like(alphas[:, :1]), 1-alphas], -1) # [1, 1-a1, 1-a2, ...]
+            torch.cat([torch.ones_like(alphas[:, :1]), 1-alphas+1e-10], -1) # [1, 1-a1, 1-a2, ...]
         transmittance = torch.cumprod(alphas_shifted[:, :-1], -1) # [1, 1-a1, (1-a1)(1-a2), ...]
 
+        
         weights = alphas * transmittance
         weights_sum = reduce(weights, 'n1 n2 -> n1', 'sum')
 
         results[f'weights_{typ}'] = weights
         results[f'opacity_{typ}'] = weights_sum
-        if output_transient:
-            results['transient_sigmas'] = transient_sigmas
         if test_time and typ == 'coarse':
             return
+
+
         
         rgb_map = reduce(rearrange(weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
                             'n1 n2 c -> n1 c', 'sum')
@@ -198,7 +191,8 @@ def render_rays(models,
         perturb_rand = perturb * torch.rand_like(z_vals)
         z_vals = lower + (upper - lower) * perturb_rand
 
-    xyz_coarse = rays_o + rays_d * rearrange(z_vals, 'n1 n2 -> n1 n2 1')
+    xyz_coarse = rays_o + rays_d * rearrange(z_vals, 'n1 n2 -> n1 n2 1') # [N_rays, N_samples, 3]
+    # pts = xyz_coarse
 
     results = {}
     output_transient = False
@@ -213,17 +207,7 @@ def render_rays(models,
         xyz_fine = rays_o + rays_d * rearrange(z_vals, 'n1 n2 -> n1 n2 1')
 
         model = models['fine']
-        # if model.encode_appearance:
-        #     if 'a_embedded' in kwargs:
-        #         a_embedded = kwargs['a_embedded']
-        #     else:
-        #         a_embedded = embeddings['a'](ts)
-        # output_transient = kwargs.get('output_transient', True) and model.encode_transient
-        # if output_transient:
-        #     if 't_embedded' in kwargs:
-        #         t_embedded = kwargs['t_embedded']
-        #     else:
-        #         t_embedded = embeddings['t'](ts)
+        
         inference(results, model, xyz_fine, z_vals, test_time, **kwargs)
 
     return results

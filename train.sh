@@ -5,4 +5,4 @@ python train.py \
   --num_epochs 10 --batch_size 1024 \
   --optimizer adam --lr 5e-4 --lr_scheduler cosine \
   --root_dir ./data/sacre_coeur/ --dataset_name phototourism \
-  --exp_name sacre_coeur_scale2  --num_gpus 2
+  --exp_name sacre_s2_1  --num_gpus 2

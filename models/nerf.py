@@ -13,7 +13,7 @@ class PosEmbedding(nn.Module):
         if logscale:
             self.freqs = 2**torch.linspace(0, max_logscale, N_freqs)
         else:
-            self.freqs = torch.linspace(1, 2**max_logscale, N_freqs)
+            self.freqs = torch.linspace(2.**0., 2**max_logscale, N_freqs)
 
     def forward(self, x):
         """
@@ -31,98 +31,58 @@ class PosEmbedding(nn.Module):
         return torch.cat(out, -1)
 
 
+# Model
 class NeRF(nn.Module):
-    def __init__(self, typ,
-                 D=8, W=256, skips=[4],
-                 in_channels_xyz=3, in_channels_dir=3):
+    def __init__(self, typ ,D=8, W=256, input_ch=3, input_ch_views=3, output_ch=4, skips=[4], use_viewdirs=False):
+        """ 
         """
-        ---Parameters for the original NeRF---
-        D: number of layers for density (sigma) encoder
-        W: number of hidden units in each layer
-        skips: add skip connection in the Dth layer
-        in_channels_xyz: number of input channels for xyz (3+3*10*2=63 by default)
-        in_channels_dir: number of input channels for direction (3+3*4*2=27 by default)
-        in_channels_t: number of input channels for t
-
-        ---Parameters for NseRF-W (used in fine model only as per section 4.3)---
-        ---cf. Figure 3 of the paper---
-        encode_appearance: whether to add appearance encoding as input (NeRF-A)
-        in_channels_a: appearance embedding dimension. n^(a) in the paper
-        encode_transient: whether to add transient encoding as input (NeRF-U)
-        in_channels_t: transient embedding dimension. n^(tau) in the paper
-        beta_min: minimum pixel color variance
-        """
- 
-        super().__init__()
+        super(NeRF, self).__init__()
         self.typ = typ
         self.D = D
-        self.W = W
+        self.W = int(W)
+        self.input_ch = int(input_ch)
+        self.input_ch_views = int(input_ch_views)
         self.skips = skips
-        self.in_channels_xyz = in_channels_xyz
-        self.in_channels_dir = in_channels_dir
-
+        self.use_viewdirs = use_viewdirs
+        
         self.pts_linears = nn.ModuleList(
-            [nn.Linear(in_channels_xyz, W)] + [nn.Linear(W, W) if i not in self.skips else nn.Linear(W + in_channels_xyz, W) for i in range(D-1)])
+            [nn.Linear(input_ch, W)] + [nn.Linear(W, W) if i not in self.skips else nn.Linear(W + input_ch, W) for i in range(D-1)])
         
+        ### Implementation according to the official code release (https://github.com/bmild/nerf/blob/master/run_nerf_helpers.py#L104-L105)
+        self.views_linears = nn.ModuleList([nn.Linear(input_ch_views + W, W//2)])
+
+        ### Implementation according to the paper
+        # self.views_linears = nn.ModuleList(
+        #     [nn.Linear(input_ch_views + W, W//2)] + [nn.Linear(W//2, W//2) for i in range(D//2)])
         
-        # self.xyz_encoding_final = nn.Linear(W, W)
-
-        # direction encoding layers
-        self.dir_encoding = nn.ModuleList(
-                        [nn.Linear(W+in_channels_dir, W//2)])
-
-        # static output layers
-        self.static_rgb = nn.Linear(W//2, 3)
-        self.alpha_linear = nn.Linear(W, 1)
-        self.feature_linear = nn.Linear(W,W)
+        if use_viewdirs:
+            self.feature_linear = nn.Linear(W, W)
+            self.alpha_linear = nn.Linear(W, 1)
+            self.rgb_linear = nn.Linear(W//2, 3)
+        else:
+            self.output_linear = nn.Linear(W, output_ch)
 
     def forward(self, x):
-        """
-        Encodes input (xyz+dir) to rgb+sigma (not ready to render yet).
-        For rendering this ray, please see rendering.py
-
-        Inputs:
-            x: the embedded vector of position (+ direction + appearance + transient)
-            sigma_only: whether to infer sigma only.
-            has_transient: whether to infer the transient component.
-
-        Outputs (concatenated):
-            if sigma_ony:
-                static_sigma
-            elif output_transient:
-                static_rgb, static_sigma, transient_rgb, transient_sigma, transient_beta
-            else:
-                static_rgb, static_sigma
-        """
-  
-      
-        input_xyz, input_views = \
-                torch.split(x, [self.in_channels_xyz,
-                                self.in_channels_dir], dim=-1)
-            
-
-        xyz_ = input_xyz
-        for i in range(self.D-1):
-            xyz_ = self.pts_linears[i](xyz_)
-            xyz_ = F.relu(xyz_)
+        input_pts, input_views = torch.split(x, [self.input_ch, self.input_ch_views], dim=-1)
+        h = input_pts
+        for i, l in enumerate(self.pts_linears):
+            h = self.pts_linears[i](h)
+            h = F.relu(h)
             if i in self.skips:
-                xyz_ = torch.cat([input_xyz, xyz_], 1)
-            # xyz_ = getattr(self, f"xyz_encoding_{i+1}")(xyz_)
+                h = torch.cat([input_pts, h], -1)
 
-        static_sigma = self.alpha_linear(xyz_) # (B, 1)
-        feature  = self.feature_linear(xyz_)
-        xyz_ = torch.cat([feature,input_views],1)
+        if self.use_viewdirs:
+            alpha = self.alpha_linear(h)
+            feature = self.feature_linear(h)
+            h = torch.cat([feature, input_views], -1)
+        
+            for i, l in enumerate(self.views_linears):
+                h = self.views_linears[i](h)
+                h = F.relu(h)
 
-        for i, l in enumerate(self.dir_encoding):
-            xyz_ = self.dir_encoding[i](xyz_)
+            rgb = self.rgb_linear(h)
+            outputs = torch.cat([rgb, alpha], -1)
+        else:
+            outputs = self.output_linear(h)
 
-        static_rgb = self.static_rgb(xyz_) # (B, 3)
-        static = torch.cat([static_rgb, static_sigma], 1) # (B, 4)
-
-        #self.dir_encoding = views_linear
-       
-        #self.static_rgb
-        #self.alpha_linear 
-        #self.feature_linear
-
-        return static # (B, 9)
+        return outputs    
