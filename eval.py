@@ -6,8 +6,8 @@ from tqdm import tqdm
 import imageio
 from argparse import ArgumentParser
 
-from models.rendering_w import render_rays
-from models.nerf_w import *
+from models.rendering_mine import render_rays
+from models.nerf_mine import *
 
 from utils import load_ckpt
 import metrics
@@ -130,10 +130,10 @@ if __name__ == "__main__":
         embedding_a = torch.nn.Embedding(args.N_vocab, args.N_a).cuda()
         load_ckpt(embedding_a, args.ckpt_path, model_name='embedding_a')
         embeddings['a'] = embedding_a
-    if args.encode_t:
-        embedding_t = torch.nn.Embedding(args.N_vocab, args.N_tau).cuda()
-        load_ckpt(embedding_t, args.ckpt_path, model_name='embedding_t')
-        embeddings['t'] = embedding_t
+    # if args.encode_t:
+        # embedding_t = torch.nn.Embedding(args.N_vocab, args.N_tau).cuda()
+        # load_ckpt(embedding_t, args.ckpt_path, model_name='embedding_t')
+        # embeddings['t'] = embedding_t
 
     nerf_coarse = NeRF('coarse',
                         in_channels_xyz=6*args.N_emb_xyz+3,
@@ -144,8 +144,8 @@ if __name__ == "__main__":
                      in_channels_dir=6*args.N_emb_dir+3,
                      encode_appearance=args.encode_a,
                      in_channels_a=args.N_a,
-                     encode_transient=args.encode_t,
-                     in_channels_t=args.N_tau,
+                     # encode_transient=args.encode_t,
+                     #in_channels_t=args.N_tau,
                      beta_min=args.beta_min).cuda()
 
     load_ckpt(nerf_coarse, args.ckpt_path, model_name='nerf_coarse')

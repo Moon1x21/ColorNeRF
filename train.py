@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 from datasets import dataset_dict
 
 # models
-from models.nerf import *
-from models.rendering import *
+from models.nerf_mine import *
+from models.rendering_mine import *
 
 # optimizer, scheduler, visualization
 from utils import *
@@ -44,19 +44,19 @@ class NeRFSystem(LightningModule):
             self.embedding_a = torch.nn.Embedding(hparams.N_vocab, hparams.N_a)
             self.embeddings['a'] = self.embedding_a
             self.models_to_train += [self.embedding_a]
-        if hparams.encode_t:
-            self.embedding_t = torch.nn.Embedding(hparams.N_vocab, hparams.N_tau)
-            self.embeddings['t'] = self.embedding_t
-            self.models_to_train += [self.embedding_t]
+        # if hparams.encode_t:
+        #     self.embedding_t = torch.nn.Embedding(hparams.N_vocab, hparams.N_tau)
+        #     self.embeddings['t'] = self.embedding_t
+        #     self.models_to_train += [self.embedding_t]
 
         self.nerf_coarse = NeRF('coarse',
-                                input_ch=int(6*hparams.N_emb_xyz+3),
-                                input_ch_views=int(6*hparams.N_emb_dir+3))
+                                in_channels_xyz=int(6*hparams.N_emb_xyz+3),
+                                in_channels_dir=int(6*hparams.N_emb_dir+3))
         self.models = {'coarse': self.nerf_coarse}
         if hparams.N_importance > 0:
             self.nerf_fine = NeRF('fine',
-                                  input_ch=int(6*hparams.N_emb_xyz+3),
-                                  input_ch_views=int(6*hparams.N_emb_dir+3))
+                                  in_channels_xyz=int(6*hparams.N_emb_xyz+3),
+                                  in_channels_dir=int(6*hparams.N_emb_dir+3))
             self.models['fine'] = self.nerf_fine
         self.models_to_train += [self.models]
 

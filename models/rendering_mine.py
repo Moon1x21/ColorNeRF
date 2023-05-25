@@ -100,37 +100,38 @@ def render_rays(models,
         # Perform model inference to get rgb and raw sigma
         B = xyz_.shape[0]
         out_chunks = []
-        if typ=='coarse' and test_time:
+        if typ=='coarse' and test_time :
             for i in range(0, B, chunk):
                 xyz_embedded = embedding_xyz(xyz_[i:i+chunk])
                 out_chunks += [model(xyz_embedded, sigma_only=True)]
             out = torch.cat(out_chunks, 0)
             static_sigmas = rearrange(out, '(n1 n2) 1 -> n1 n2', n1=N_rays, n2=N_samples_)
+            
         else: # infer rgb and sigma and others
             dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             # create other necessary inputs
-            if model.encode_appearance:
-                a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
-            if output_transient:
-                t_embedded_ = repeat(t_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+            # if model.encode_appearance:
+            #     a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+            # if output_transient:
+            #     t_embedded_ = repeat(t_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             for i in range(0, B, chunk):
                 # inputs for original NeRF
                 inputs = [embedding_xyz(xyz_[i:i+chunk]), dir_embedded_[i:i+chunk]]
                 # additional inputs for NeRF-W
-                if model.encode_appearance:
-                    inputs += [a_embedded_[i:i+chunk]]
-                if output_transient:
-                    inputs += [t_embedded_[i:i+chunk]]
+                # if model.encode_appearance:
+                #     inputs += [a_embedded_[i:i+chunk]]
+                # if output_transient:
+                #     inputs += [t_embedded_[i:i+chunk]]
                 out_chunks += [model(torch.cat(inputs, 1), output_transient=output_transient)]
 
             out = torch.cat(out_chunks, 0)
             out = rearrange(out, '(n1 n2) c -> n1 n2 c', n1=N_rays, n2=N_samples_)
-            static_rgbs = out[..., :3] # (N_rays, N_samples_, 3)
+            static_rgb = out[..., :3] # (N_rays, N_samples_, 3)
+            # print(static_rgb.size())
             static_sigmas = out[..., 3] # (N_rays, N_samples_)
             if output_transient:
-                transient_rgbs = out[..., 4:7]
-                transient_sigmas = out[..., 7]
-                transient_betas = out[..., 8]
+                final_rgbs = out[..., 4:7]
+                transient_betas = out[..., 7]
 
         # Convert these values using volume rendering
         deltas = z_vals[:, 1:] - z_vals[:, :-1] # (N_rays, N_samples_-1)
@@ -139,8 +140,8 @@ def render_rays(models,
 
         if output_transient:
             static_alphas = 1-torch.exp(-deltas*static_sigmas)
-            transient_alphas = 1-torch.exp(-deltas*transient_sigmas)
-            alphas = 1-torch.exp(-deltas*(static_sigmas+transient_sigmas))
+            # transient_alphas = 1-torch.exp(-deltas*transient_sigmas)
+            alphas = 1-torch.exp(-deltas*(static_sigmas))
         else:
 #             noise = torch.randn_like(static_sigmas) * noise_std
             alphas = 1-torch.exp(-deltas*static_sigmas)
@@ -151,7 +152,7 @@ def render_rays(models,
 
         if output_transient:
             static_weights = static_alphas * transmittance
-            transient_weights = transient_alphas * transmittance
+            transient_weights = static_alphas * transmittance
 
         weights = alphas * transmittance
         weights_sum = reduce(weights, 'n1 n2 -> n1', 'sum')
@@ -159,20 +160,20 @@ def render_rays(models,
         results[f'weights_{typ}'] = weights
         results[f'opacity_{typ}'] = weights_sum
         if output_transient:
-            results['transient_sigmas'] = transient_sigmas
+            results['transient_sigmas'] = static_alphas
         if test_time and typ == 'coarse':
             return
 
 
         if output_transient:
-            static_rgb_map = reduce(rearrange(static_weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
+            static_rgb_map = reduce(rearrange(static_weights, 'n1 n2 -> n1 n2 1')*final_rgbs,
                                     'n1 n2 c -> n1 c', 'sum')
             if white_back:
                 static_rgb_map += 1-rearrange(weights_sum, 'n -> n 1')
             
-            transient_rgb_map = \
-                reduce(rearrange(transient_weights, 'n1 n2 -> n1 n2 1')*transient_rgbs,
-                       'n1 n2 c -> n1 c', 'sum')
+            # transient_rgb_map = \
+            #     reduce(rearrange(transient_weights, 'n1 n2 -> n1 n2 1')*final_rgbs,
+            #            'n1 n2 c -> n1 c', 'sum')
             results['beta'] = reduce(transient_weights*transient_betas, 'n1 n2 -> n1', 'sum')
             # Add beta_min AFTER the beta composition. Different from eq 10~12 in the paper.
             # See "Notes on differences with the paper" in README.
@@ -180,8 +181,8 @@ def render_rays(models,
             
             # the rgb maps here are when both fields exist
             results['_rgb_fine_static'] = static_rgb_map
-            results['_rgb_fine_transient'] = transient_rgb_map
-            results['rgb_fine'] = static_rgb_map + transient_rgb_map
+            # results['_rgb_fine_transient'] = transient_rgb_map
+            results['rgb_fine'] = static_rgb_map
 
             if test_time:
                 # Compute also static and transient rgbs when only one field exists.
@@ -192,7 +193,7 @@ def render_rays(models,
                 static_transmittance = torch.cumprod(static_alphas_shifted[:, :-1], -1)
                 static_weights_ = static_alphas * static_transmittance
                 static_rgb_map_ = \
-                    reduce(rearrange(static_weights_, 'n1 n2 -> n1 n2 1')*static_rgbs,
+                    reduce(rearrange(static_weights_, 'n1 n2 -> n1 n2 1')*final_rgbs,
                            'n1 n2 c -> n1 c', 'sum')
                 if white_back:
                     static_rgb_map_ += 1-rearrange(weights_sum, 'n -> n 1')
@@ -201,16 +202,16 @@ def render_rays(models,
                     reduce(static_weights_*z_vals, 'n1 n2 -> n1', 'sum')
 
                 transient_alphas_shifted = \
-                    torch.cat([torch.ones_like(transient_alphas[:, :1]), 1-transient_alphas], -1)
+                    torch.cat([torch.ones_like(static_alphas[:, :1]), 1-static_alphas], -1)
                 transient_transmittance = torch.cumprod(transient_alphas_shifted[:, :-1], -1)
-                transient_weights_ = transient_alphas * transient_transmittance
+                transient_weights_ = static_alphas * transient_transmittance
                 results['rgb_fine_transient'] = \
-                    reduce(rearrange(transient_weights_, 'n1 n2 -> n1 n2 1')*transient_rgbs,
+                    reduce(rearrange(transient_weights_, 'n1 n2 -> n1 n2 1')*final_rgbs,
                            'n1 n2 c -> n1 c', 'sum')
                 results['depth_fine_transient'] = \
                     reduce(transient_weights_*z_vals, 'n1 n2 -> n1', 'sum')
         else: # no transient field
-            rgb_map = reduce(rearrange(weights, 'n1 n2 -> n1 n2 1')*static_rgbs,
+            rgb_map = reduce(rearrange(weights, 'n1 n2 -> n1 n2 1')*static_rgb,
                              'n1 n2 c -> n1 c', 'sum')
             if white_back:
                 rgb_map += 1-rearrange(weights_sum, 'n -> n 1')
@@ -270,11 +271,11 @@ def render_rays(models,
             else:
                 a_embedded = embeddings['a'](ts)
         output_transient = kwargs.get('output_transient', True) and model.encode_transient
-        if output_transient:
-            if 't_embedded' in kwargs:
-                t_embedded = kwargs['t_embedded']
-            else:
-                t_embedded = embeddings['t'](ts)
+        # if output_transient:
+        #     if 't_embedded' in kwargs:
+        #         t_embedded = kwargs['t_embedded']
+            # else:
+            #     t_embedded = embeddings['t'](ts)
         inference(results, model, xyz_fine, z_vals, test_time, **kwargs)
 
     return results

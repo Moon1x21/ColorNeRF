@@ -8,11 +8,11 @@ class ColorLoss(nn.Module):
         self.loss = nn.MSELoss(reduction='mean')
 
     def forward(self, inputs, targets):
-        loss = torch.mean((inputs['rgb_coarse'] - targets) ** 2)
-        # loss = self.loss(inputs['rgb_coarse'], targets)
+        # loss = torch.mean((inputs['rgb_coarse'] - targets) ** 2)
+        loss = self.loss(inputs['rgb_coarse'], targets)
         if 'rgb_fine' in inputs:
-            loss += torch.mean((inputs['rgb_fine'] - targets) ** 2)
-            # loss += self.loss(inputs['rgb_fine'], targets)
+            # loss += torch.mean((inputs['rgb_fine'] - targets) ** 2)
+            loss += self.loss(inputs['rgb_fine'], targets)
 
         return loss
 

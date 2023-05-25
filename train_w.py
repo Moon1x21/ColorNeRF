@@ -178,7 +178,6 @@ class NeRFSystem(LightningModule):
 
         self.log('val/loss', mean_loss)
         self.log('val/psnr', mean_psnr, prog_bar=True)
-        
 
 
 def main(hparams):

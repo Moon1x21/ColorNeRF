@@ -101,34 +101,27 @@ def render_rays(models,
         # Perform model inference to get rgb and raw sigma
         B = xyz_.shape[0]
         out_chunks = []
-        if typ=='coarse' and test_time:
-            dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
-            for i in range(0, B, chunk):
-                xyz_embedded = embedding_xyz(xyz_[i:i+chunk])
-                out_chunks += [model(torch.cat(xyz_embedded, dir_embedded_[i:i+chunk],1))]
-            out = torch.cat(out_chunks, 0)
-            static_sigmas = rearrange(out, '(n1 n2) 1 -> n1 n2', n1=N_rays, n2=N_samples_)
-        else: # infer rgb and sigma and others
-            dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
-            # create other necessary inputs
+        
+        dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+        # create other necessary inputs
+        # if model.encode_appearance:
+        #     a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+        # if output_transient:
+        #     t_embedded_ = repeat(t_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+        for i in range(0, B, chunk):
+            # inputs for original NeRF
+            inputs = [embedding_xyz(xyz_[i:i+chunk]), dir_embedded_[i:i+chunk]]
+            # additional inputs for NeRF-W
             # if model.encode_appearance:
-            #     a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+            #     inputs += [a_embedded_[i:i+chunk]]
             # if output_transient:
-            #     t_embedded_ = repeat(t_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
-            for i in range(0, B, chunk):
-                # inputs for original NeRF
-                inputs = [embedding_xyz(xyz_[i:i+chunk]), dir_embedded_[i:i+chunk]]
-                # additional inputs for NeRF-W
-                # if model.encode_appearance:
-                #     inputs += [a_embedded_[i:i+chunk]]
-                # if output_transient:
-                #     inputs += [t_embedded_[i:i+chunk]]
-                out_chunks += [model(torch.cat(inputs, 1))]
+            #     inputs += [t_embedded_[i:i+chunk]]
+            out_chunks += [model(torch.cat(inputs, 1))]
 
-            out = torch.cat(out_chunks, 0)
-            out = rearrange(out, '(n1 n2) c -> n1 n2 c', n1=N_rays, n2=N_samples_)
-            static_rgbs = out[..., :3] # (N_rays, N_samples_, 3)
-            static_sigmas = out[..., 3] # (N_rays, N_samples_)
+        out = torch.cat(out_chunks, 0)
+        out = rearrange(out, '(n1 n2) c -> n1 n2 c', n1=N_rays, n2=N_samples_)
+        static_rgbs = out[..., :3] # (N_rays, N_samples_, 3)
+        static_sigmas = out[..., 3] # (N_rays, N_samples_)
 
         # Convert these values using volume rendering
         deltas = z_vals[:, 1:] - z_vals[:, :-1] # (N_rays, N_samples_-1)
@@ -147,8 +140,8 @@ def render_rays(models,
 
         results[f'weights_{typ}'] = weights
         results[f'opacity_{typ}'] = weights_sum
-        if test_time and typ == 'coarse':
-            return
+        # if test_time and typ == 'coarse':
+        #     return
 
 
         

@@ -161,6 +161,7 @@ class PhototourismDataset(Dataset):
                         img = img.resize((img_w, img_h), Image.LANCZOS)
                     img = self.transform(img) # (3, h, w)
                     img = img.view(3, -1).permute(1, 0) # (h*w, 3) RGB
+                
                     self.all_rgbs += [img]
                     
                     directions = get_ray_directions(img_h, img_w, self.Ks[id_])
