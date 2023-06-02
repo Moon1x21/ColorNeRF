@@ -100,6 +100,7 @@ def render_rays(models,
         # Perform model inference to get rgb and raw sigma
         B = xyz_.shape[0]
         out_chunks = []
+        # print(typ, model.encode_appearance)
         if typ=='coarse' and test_time :
             for i in range(0, B, chunk):
                 xyz_embedded = embedding_xyz(xyz_[i:i+chunk])
@@ -110,16 +111,16 @@ def render_rays(models,
         else: # infer rgb and sigma and others
             dir_embedded_ = repeat(dir_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             # create other necessary inputs
-            # if model.encode_appearance:
-            #     a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
+            if model.encode_appearance:
+                a_embedded_ = repeat(a_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             # if output_transient:
             #     t_embedded_ = repeat(t_embedded, 'n1 c -> (n1 n2) c', n2=N_samples_)
             for i in range(0, B, chunk):
                 # inputs for original NeRF
                 inputs = [embedding_xyz(xyz_[i:i+chunk]), dir_embedded_[i:i+chunk]]
                 # additional inputs for NeRF-W
-                # if model.encode_appearance:
-                #     inputs += [a_embedded_[i:i+chunk]]
+                if model.encode_appearance:
+                    inputs += [a_embedded_[i:i+chunk]]
                 # if output_transient:
                 #     inputs += [t_embedded_[i:i+chunk]]
                 out_chunks += [model(torch.cat(inputs, 1), output_transient=output_transient)]

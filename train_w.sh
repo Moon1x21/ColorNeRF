@@ -7,4 +7,4 @@ python train_w.py \
   --exp_name blender_nerf_w \
   --data_perturb color \
   --num_epochs 10 \
-  --encode_a --encode_t --beta_min 0.1
+  --encode_a --encode_t --beta_min 0.1 --num_gpus 1
