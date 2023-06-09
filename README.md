@@ -152,6 +152,7 @@ All the experiments are trained for 10 epochs.
 
 ## Reference
 This code is based on Unofficial implementation of [NeRF-W](https://github.com/kwea123/nerf_pl) 
+
 '''
 @inproceedings{martinbrualla2020nerfw,
                           author = {Martin-Brualla, Ricardo
@@ -160,12 +161,12 @@ This code is based on Unofficial implementation of [NeRF-W](https://github.com/k
                                     and Barron, Jonathan T.
                                     and Dosovitskiy, Alexey
                                     and Duckworth, Daniel},
-                          title = {{NeRF in the Wild: Neural Radiance Fields for
-                                  Unconstrained Photo Collections}},
+                          title = {{NeRF in the Wild: Neural Radiance Fields for Unconstrained Photo Collections}},
                           booktitle = {CVPR},
                           year={2021}
                       }
 '''
+
 
 '''
 @article{mildenhall2021nerf,
