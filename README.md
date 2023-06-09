@@ -14,6 +14,8 @@ To handle this problem, this research presents **ColorNeRF** that can represent 
 
 <details>
   <summary>연구 배경</summary>
+
+## Introduction
 현재 View synthesis는 많은 발전을 이루었다. 특히 Neural rendering 방식을 이용하여 더욱 발전된 성과를 보여주었다. 대표적인 Neural Radiance Fields (NeRF)는 실제로
 정교한 View synthesis 결과를 보여주고 있다. 하지만, 이러한 좋은 결과를 보여주는 연구에서도 아직 해결해야 할 부분은 존재한다. 현재
 NeRF는 제한된 환경에서 얻은 이미지를 이용하여 학습을 진행한다. 만약, 제한된 환경에서 얻은 이미지가 아닌, 실제 환경에서 얻은 이미지들을 사용하게 된다면 낮은 성능을 보여주게
@@ -64,6 +66,8 @@ NeRF는 여러 개의 Input 이미지와 그에 해당되는 100 개의 Camera t
 
 <details>
   <summary>제안 방안</summary>
+
+## Method
 다음은 임베딩 벡터의 불안정성을 완화하며 다양한 이미지를 사용하여 균일한 View synthesis 를 하기 위해 고안해 낸 새로운 알고리즘에 대해 소개한다. 
 우선, 이미지 상에서 색상 변동에 대한 정의를 먼저 내려야 한다. 기존의 외부환경에서 얻은 이미지를 기준으로 원활한 View synthesis 가 가능하기 위해서는 색상의 차이가 밝기 차이만
 존재하는지, 아니면 색상 자체의 차이 또한 존재하는지 알아보아야 한다. 외부환경에서 얻은 이미지의 색사이 변화하는 경우 대부분 밝기 변화량이 주된 변화인데, RGB 자체에 대한 변화량은
