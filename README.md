@@ -166,6 +166,7 @@ This code is based on Unofficial implementation of [NeRF-W](https://github.com/k
                           year={2021}
                       }
 '''
+
 '''
 @article{mildenhall2021nerf,
   title={Nerf: Representing scenes as neural radiance fields for view synthesis},
