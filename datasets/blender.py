@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 import json
 import numpy as np
 import os
+import imageio
 from PIL import Image, ImageDraw
 from torchvision import transforms as T
 
@@ -73,6 +74,8 @@ class BlenderDataset(Dataset):
         if self.split == 'train': # create buffer of all rays and rgb data
             self.all_rays = []
             self.all_rgbs = []
+            dir_name = 'results/dataset/blender/lego'
+            os.makedirs(dir_name, exist_ok=True)
             for t, frame in enumerate(self.meta['frames']):
                 pose = np.array(frame['transform_matrix'])[:3, :4]
                 c2w = torch.FloatTensor(pose)
@@ -81,7 +84,9 @@ class BlenderDataset(Dataset):
                 img = Image.open(image_path)
                 if t != 0: # perturb everything except the first image.
                            # cf. Section D in the supplementary material
+                    # imageio.imwrite(os.path.join(dir_name, f'{t:03d}_original.png'), img)
                     img = add_perturbation(img, self.perturbation, t)
+                    # imageio.imwrite(os.path.join(dir_name, f'{t:03d}.png'), img)
 
                 img = img.resize(self.img_wh, Image.LANCZOS)
                 img = self.transform(img) # (4, h, w)
