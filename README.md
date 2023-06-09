@@ -153,7 +153,7 @@ All the experiments are trained for 10 epochs.
 ## Reference
 This code is based on Unofficial implementation of [NeRF-W](https://github.com/kwea123/nerf_pl) 
 
-'''
+```
 @inproceedings{martinbrualla2020nerfw,
                           author = {Martin-Brualla, Ricardo
                                     and Radwan, Noha
@@ -165,10 +165,10 @@ This code is based on Unofficial implementation of [NeRF-W](https://github.com/k
                           booktitle = {CVPR},
                           year={2021}
                       }
-'''
+```
 
 
-'''
+```
 @article{mildenhall2021nerf,
   title={Nerf: Representing scenes as neural radiance fields for view synthesis},
   author={Mildenhall, Ben and Srinivasan, Pratul P and Tancik, Matthew and Barron, Jonathan T and Ramamoorthi, Ravi and Ng, Ren},
@@ -179,4 +179,4 @@ This code is based on Unofficial implementation of [NeRF-W](https://github.com/k
   year={2021},
   publisher={ACM New York, NY, USA}
 }
-'''
+```
