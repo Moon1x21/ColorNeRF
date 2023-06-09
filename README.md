@@ -153,26 +153,26 @@ All the experiments are trained for 10 epochs.
 ## Reference
 This code is based on Unofficial implementation of [NeRF-W](https://github.com/kwea123/nerf_pl) 
 
-@inproceedings{martinbrualla2020nerfw,
-                          author = {Martin-Brualla, Ricardo
-                                    and Radwan, Noha
-                                    and Sajjadi, Mehdi S. M.
-                                    and Barron, Jonathan T.
-                                    and Dosovitskiy, Alexey
-                                    and Duckworth, Daniel},
-                          title = {{NeRF in the Wild: Neural Radiance Fields for
-                                   Unconstrained Photo Collections}},
-                          booktitle = {CVPR},
-                          year={2021}
-                      }
+  @inproceedings{martinbrualla2020nerfw,
+                            author = {Martin-Brualla, Ricardo
+                                      and Radwan, Noha
+                                      and Sajjadi, Mehdi S. M.
+                                      and Barron, Jonathan T.
+                                      and Dosovitskiy, Alexey
+                                      and Duckworth, Daniel},
+                            title = {{NeRF in the Wild: Neural Radiance Fields for
+                                    Unconstrained Photo Collections}},
+                            booktitle = {CVPR},
+                            year={2021}
+                        }
 
-@article{mildenhall2021nerf,
-  title={Nerf: Representing scenes as neural radiance fields for view synthesis},
-  author={Mildenhall, Ben and Srinivasan, Pratul P and Tancik, Matthew and Barron, Jonathan T and Ramamoorthi, Ravi and Ng, Ren},
-  journal={Communications of the ACM},
-  volume={65},
-  number={1},
-  pages={99--106},
-  year={2021},
-  publisher={ACM New York, NY, USA}
-}
+  @article{mildenhall2021nerf,
+    title={Nerf: Representing scenes as neural radiance fields for view synthesis},
+    author={Mildenhall, Ben and Srinivasan, Pratul P and Tancik, Matthew and Barron, Jonathan T and Ramamoorthi, Ravi and Ng, Ren},
+    journal={Communications of the ACM},
+    volume={65},
+    number={1},
+    pages={99--106},
+    year={2021},
+    publisher={ACM New York, NY, USA}
+  }
