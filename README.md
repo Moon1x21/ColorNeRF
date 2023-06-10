@@ -112,7 +112,7 @@ All random seeds are fixed to reproduce the same perturbations every time.
 For detailed implementation, see [blender.py](datasets/blender.py).
 
 *  Color perturbations: Uses the same parameters in the paper.
-![Original](https://github.com/Moon1x21/ColorNeRF/assets/62733294/08a0b67d-28b2-4f0b-8fe7-356a570fd523)
+![Original](https://github.com/Moon1x21/ColorNeRF/assets/62733294/3c5b6ad6-5f84-4ca2-a7de-a4d951c6bc75)
 
 ![Color Purturbation](https://github.com/Moon1x21/ColorNeRF/assets/62733294/0d816437-1a55-44ac-b476-e91016f95a7a)
 
@@ -200,7 +200,7 @@ All the experiments are trained for 10 epochs.
 1.  Result shows **ColorNeRF** is able to handle color variation. 
 
 <p align="center">
-  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/7cdb189e-40a5-41fa-85db-04a342dde0f7">
+  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/7ed20a9b-e9b7-4f98-9e19-07935f40962e">
   <br>
   PSNR = 28.59
 </p>
@@ -216,11 +216,26 @@ All the experiments are trained for 10 epochs.
 3. **NeRF-W** trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
 
 <p align="center">
-   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/3a8885b1-7cdf-4624-b4f4-1e9ee5ff5e34">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/ac13f0f7-823c-45f2-8e05-6d111c2f1f1d">
    <br>
    PSNR = 27.73
 </p>
 
+Through the results, it is clear **ColorNeRF** can represent the details more 
+accurately compare with **NeRF-W**.
+
+<p align="center">
+   <img width="200" alt="ColorNeRF_2" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/907e9cba-2bfb-4edd-b85c-bae04a2743b7">
+  <img width="200" alt="NeRF-W_2" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/314e5374-2d76-4fbf-8fe3-7eebcf5fcddd">
+  <br>
+   <img width="200" alt="ColorNeRF_1" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/d23d2ddb-327e-4da0-a2c0-ce83aa09c18c">
+  <img width="200" alt="NeRF-W_1" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/17cc42ee-7381-45e2-b1ec-a65335e3f58b">
+  <br>
+  <img width="200" alt="ColorNeRF" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/4aaff071-02b4-4dbd-ab0e-b343e2ea7cce">
+  <img width="200" alt="NeRF-W" src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/9598f380-8c49-4864-b01c-0bd9184885ed">
+  <br>
+  Left: ColorNeRF, Right: NeRF-W
+</p>
 ### Hotdog
 
 1.  Result shows **ColorNeRF** is able to handle color variation. 
