@@ -101,9 +101,6 @@ NeRF는 여러 개의 Input 이미지와 그에 해당되는 100 개의 Camera t
 # :key: Training
 
 ## Blender
-
-<details>
-  <summary>Steps</summary>
    
 ### Data download
 
@@ -149,12 +146,8 @@ python train.py \
    --encode_t --encode_a --beta_min 0.1
 ```
 
-</details>
 
 ## Phototourism dataset
-
-<details>
-  <summary>Steps</summary>
 
 ### Data download
 
@@ -185,8 +178,6 @@ python train.py \
 
 `--N_vocab` should be set to an integer larger than the number of images (dependent on different scenes). For example, "brandenburg_gate" has in total 1363 images (under `dense/images/`), so any number larger than 1363 works (no need to set to exactly the same number). **Attention!** If you forget to set this number, or it is set smaller than the number of images, the program will yield `RuntimeError: CUDA error: device-side assert triggered` (which comes from `torch.nn.Embedding`).
 
-</details>
-
 ## NeRF-W
 
 If you want to train original NeRF-W for comparing ColorNeRF, using train_w.py file.
@@ -203,29 +194,56 @@ It will create folder `results/{dataset_name}/{exp_name}` and run inference on a
 
 All the experiments are trained for 10 epochs.
 
-1.  Result shows ColorNeRF is able to handle color variation.
+### Lego
+
+1.  Result shows **ColorNeRF** is able to handle color variation. 
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/11364490/105775080-8d51eb80-5fa9-11eb-9e89-7147c6377453.gif">
-  <img src="https://user-images.githubusercontent.com/11364490/105630746-43c0ae00-5e8e-11eb-856a-e6ce7ac8c16f.gif">
   <br>
-  Left: NeRF, PSNR=18.83 (paper=15.73). Right: <a href=https://github.com/kwea123/nerf_pl/releases/tag/nerfw_all>pretrained</a> <b>NeRF-W</b>, PSNR=<b>24.86</b> (paper=22.19).
+  PSNR = 28.59
 </p>
 
-2. Reference: Original NeRF (without `--encode_a` and `--encode_t`) trained on perturbed data. As the results show original NeRF is not able to handle the color perturbation as the network has the precondition that the color is static.
+2. **NeRF** trained on perturbed data. As the results show original NeRF is not able to handle the color perturbation as the network has the precondition that the color is static.
 
 <p align="center">
    <img src="https://user-images.githubusercontent.com/11364490/105649082-0e4dac00-5ef2-11eb-9d56-946e2ac068c4.gif">
    <br>
-   PSNR= 
+   PSNR = 24.67
 </p>
 
-3. Reference: NeRF-w (with `--encode_a` and `--encode_t`) trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
+3. **NeRF-W** trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
+
+<p align="center">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/0e1e25e2-3688-4382-a989-a66f34974f4d">
+   <br>
+   PSNR = 27.73
+</p>
+
+### Hotdog
+
+1.  Result shows **ColorNeRF** is able to handle color variation. 
+
+<p align="center">
+  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/c63931bf-7b38-45f0-b204-60c84dcc4fab">
+  <br>
+  PSNR = 31.86
+</p>
+
+2. **NeRF** trained on perturbed data. As the results show original NeRF is not able to handle the color perturbation as the network has the precondition that the color is static.
 
 <p align="center">
    <img src="https://user-images.githubusercontent.com/11364490/105649082-0e4dac00-5ef2-11eb-9d56-946e2ac068c4.gif">
    <br>
-   PSNR= 
+   PSNR = 31.52
+</p>
+
+3. **NeRF-W** trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
+
+<p align="center">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/71778823-e3de-4c82-b5b2-a97151267684">
+   <br>
+   PSNR = 26.77
 </p>
 
 ## Reference
