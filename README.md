@@ -112,8 +112,9 @@ All random seeds are fixed to reproduce the same perturbations every time.
 For detailed implementation, see [blender.py](datasets/blender.py).
 
 *  Color perturbations: Uses the same parameters in the paper.
+![Original](https://github.com/Moon1x21/ColorNeRF/assets/62733294/08a0b67d-28b2-4f0b-8fe7-356a570fd523)
 
-![color](https://user-images.githubusercontent.com/11364490/105580035-4ad3b780-5dcd-11eb-97cc-4cea3c9743ac.gif)
+![Color Purturbation](https://github.com/Moon1x21/ColorNeRF/assets/62733294/0d816437-1a55-44ac-b476-e91016f95a7a)
 
 
 ### Training model
@@ -199,7 +200,7 @@ All the experiments are trained for 10 epochs.
 1.  Result shows **ColorNeRF** is able to handle color variation. 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/11364490/105775080-8d51eb80-5fa9-11eb-9e89-7147c6377453.gif">
+  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/7cdb189e-40a5-41fa-85db-04a342dde0f7">
   <br>
   PSNR = 28.59
 </p>
@@ -207,7 +208,7 @@ All the experiments are trained for 10 epochs.
 2. **NeRF** trained on perturbed data. As the results show original NeRF is not able to handle the color perturbation as the network has the precondition that the color is static.
 
 <p align="center">
-   <img src="https://user-images.githubusercontent.com/11364490/105649082-0e4dac00-5ef2-11eb-9d56-946e2ac068c4.gif">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/01c9f271-9508-4289-9aa0-5cacb22f7431">
    <br>
    PSNR = 24.67
 </p>
@@ -215,7 +216,7 @@ All the experiments are trained for 10 epochs.
 3. **NeRF-W** trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
 
 <p align="center">
-   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/0e1e25e2-3688-4382-a989-a66f34974f4d">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/3a8885b1-7cdf-4624-b4f4-1e9ee5ff5e34">
    <br>
    PSNR = 27.73
 </p>
@@ -225,7 +226,7 @@ All the experiments are trained for 10 epochs.
 1.  Result shows **ColorNeRF** is able to handle color variation. 
 
 <p align="center">
-  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/c63931bf-7b38-45f0-b204-60c84dcc4fab">
+  <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/6ff831b3-ac6a-43af-a37e-f53856b81b81">
   <br>
   PSNR = 31.86
 </p>
@@ -233,7 +234,7 @@ All the experiments are trained for 10 epochs.
 2. **NeRF** trained on perturbed data. As the results show original NeRF is not able to handle the color perturbation as the network has the precondition that the color is static.
 
 <p align="center">
-   <img src="https://user-images.githubusercontent.com/11364490/105649082-0e4dac00-5ef2-11eb-9d56-946e2ac068c4.gif">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/00273163-6913-4053-92b6-1e05fde93890">
    <br>
    PSNR = 31.52
 </p>
@@ -241,7 +242,7 @@ All the experiments are trained for 10 epochs.
 3. **NeRF-W** trained on perturbed data. Even though the NeRF-W is able to handle the color perturbation, there are still some details are missing.
 
 <p align="center">
-   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/71778823-e3de-4c82-b5b2-a97151267684">
+   <img src="https://github.com/Moon1x21/ColorNeRF/assets/62733294/0afa13e2-b08a-40e2-92d6-6ec94d2217e5">
    <br>
    PSNR = 26.77
 </p>
