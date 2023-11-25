@@ -119,7 +119,7 @@ Download the pretrained models and training logs in [release]().
 Use [eval.py](eval.py) to create the whole sequence of moving views.
 It will create folder `results/{dataset_name}/{exp_name}` and run inference on all test data, finally create a gif out of them.
 
-# :rocket: Reseult
+# :rocket: Result
 
 ## Blender result
 
